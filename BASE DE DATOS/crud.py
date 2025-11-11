@@ -13,7 +13,7 @@ def get_connection():
     return oracledb.connect(user=username, password=password, dsn=dsn)
 def create_table() -> None:
     ddl = (
-"CREATE TABLE jaqv_personas ("
+"CREATE TABLE personas ("
 "rut VARCHAR2(50) PRIMARY KEY,"
 "nombres VARCHAR2(200),"
 "apellidos VARCHAR2(200),"
