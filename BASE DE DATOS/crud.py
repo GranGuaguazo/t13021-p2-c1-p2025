@@ -22,7 +22,7 @@ def create_schema(query):
             conn.commit()
     except oracledb.DatabaseError as e:
         err = e
-        print(f"No se pudo crear la tabla: {err}")
+        print(f"No se pudo crear la tabla: {err} \n {query}")
 
 tables = [
         (
