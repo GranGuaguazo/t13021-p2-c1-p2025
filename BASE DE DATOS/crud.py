@@ -82,7 +82,26 @@ def create_perro(
         edad:int,
         historial_vacunas:datetime
 ):
-    pass
+    sql = (        
+        "INSERT INTO PERROS (id_perro, nombre, edad, historial_vacunas)"
+        "VALUES (:id_perro, :nombre, :edad, :historial_vacunas)"
+    )
+    parametros = {
+        "id_perro": id_perro,
+        "nombre": nombre,
+        "edad": edad,
+        "historial_vacunas": historial_vacunas
+    }
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql,parametros)
+                print(f"Dato insertado. \n {parametros}")
+            conn.commit()
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"No se pudo crear la tabla: {err} \n {parametros}")
 
 def create_gato(
         id_gato:int,
@@ -90,7 +109,16 @@ def create_gato(
         edad:int,
         esterilizado:str
 ):
-    pass
+    sql = (        
+        "INSERT INTO GATOS (id_gato, nombre, edad, historial_vacunas)"
+        "VALUES (:id_gato, :nombre, :edad, :historial_vacunas)"
+    )
+    parametros = {
+        "id_gato": id_gato,
+        "nombre": nombre,
+        "edad": edad,
+        "esterilizado": esterilizado
+    }
 
 def create_ave(
         id_ave:int,
@@ -117,3 +145,11 @@ def create_mascotas(
         idAve:int,
 ):
     pass
+
+
+create_perro(
+    id_perro=1,
+    nombre= "Alberto",
+    edad= 12,
+    historial_vacunas= None
+)
