@@ -76,3 +76,44 @@ for query in tables:
     create_schema(query)            
 
 
+def create_perro(
+        id_perro:int,
+        nombre:str,
+        edad:int,
+        historial_vacunas:datetime
+):
+    pass
+
+def create_gato(
+        id_gato:int,
+        nombre:str,
+        edad:int,
+        esterilizado:str
+):
+    pass
+
+def create_ave(
+        id_ave:int,
+        nombre:str,
+        edad:int,
+        control_vuelo:str,
+        tipo_jaula:str
+):
+    pass
+
+def create_HMedico(
+        id_historial:int,
+        observaciones:str,
+        tratamientos:str
+):
+    pass
+
+def create_mascotas(
+        id:int,
+        especie:str,
+        fechaconsulta:datetime,
+        idPerro:int,
+        idGato:int,
+        idAve:int,
+):
+    pass
