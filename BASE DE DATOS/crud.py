@@ -101,8 +101,9 @@ def create_perro(
             conn.commit()
     except oracledb.DatabaseError as e:
         err = e
-        print(f"No se pudo crear la tabla: {err} \n {parametros}")
-
+        print(f"No se pudo insertar el dato: {err} \n {parametros}")
+        
+        
 def create_gato(
         id_gato:int,
         nombre:str,
@@ -119,6 +120,17 @@ def create_gato(
         "edad": edad,
         "esterilizado": esterilizado
     }
+    
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql,parametros)
+                print(f"Dato insertado. \n {parametros}")
+            conn.commit()
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"No se pudo insertar el dato: {err} \n {parametros}")
+
 
 def create_ave(
         id_ave:int,
@@ -127,14 +139,54 @@ def create_ave(
         control_vuelo:str,
         tipo_jaula:str
 ):
-    pass
+    sql = (
+        "INSERT INTO AVES (id_ave, nombre, edad, control_vuelo, tipo_jaula)"
+        "VALUES (:id_ave, :nombre, :edad, :control_vuelo, :tipo_jaula)"
+    )
+    parametros = {
+        "id_ave": id_ave,
+        "nombre": nombre,
+        "edad": edad,
+        "control_vuelo": control_vuelo,
+        "tipo_jaula": tipo_jaula
+    }
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql,parametros)
+                print(f"Dato insertado. \n {parametros}")
+            conn.commit()
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"No se pudo insertar el dato: {err} \n {parametros}")
+
 
 def create_HMedico(
         id_historial:int,
         observaciones:str,
         tratamientos:str
 ):
-    pass
+    sql = (
+        "INSERT INTO HISTORIAL_MEDICO (id_historial, observaciones, tratamientos)"
+        "VALUES (:id_historial, :observaciones, :tratamientos)"
+    )
+    parametros = {
+        "id_historial": id_historial,
+        "observaciones": observaciones,
+        "tratamientos": tratamientos       
+    }
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql,parametros)
+                print(f"Dato insertado. \n {parametros}")
+            conn.commit()
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"No se pudo insertar el dato: {err} \n {parametros}")
+
 
 def create_mascotas(
         id:int,
@@ -144,7 +196,28 @@ def create_mascotas(
         idGato:int,
         idAve:int,
 ):
-    pass
+    sql = (
+        "INSERT INTO MASCOTAS (id, especie, fechaconsulta, idPerro, idGato, idAve)"
+        "VALUES (:id, :especie, :fechaconsulta, :idPerro, :idGato, :idAve)"
+    )
+    parametros = {
+        "id": id,
+        "especie": especie,
+        "fechaconsulta" : fechaconsulta,
+        "idPerro" : idPerro,
+        "idGato" : idGato,
+        "idAve" : idAve
+    }
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql,parametros)
+                print(f"Dato insertado. \n {parametros}")
+            conn.commit()
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"No se pudo insertar el dato: {err} \n {parametros}")
 
 
 create_perro(
