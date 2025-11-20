@@ -2,6 +2,7 @@ import oracledb
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+from typing import Optional
 
 load_dotenv()
 
@@ -220,9 +221,202 @@ def create_mascotas(
         print(f"No se pudo insertar el dato: {err} \n {parametros}")
 
 
-create_perro(
+def read_perro():
+    sql = (
+        "SELECT * FROM PERROS"
+    )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql)
+                print(f"Consulta a la tabla PERROS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_perro_by_id(id):
+    sql = (
+        "SELECT * FROM PERROS WHERE id = :id_perro"
+    )
+
+    parametros = {"id_perro": id}
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql,parametros)
+                print(f"Consulta a la tabla PERROS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_gato():
+    sql = (
+        "SELECT * FROM GATOS"
+    )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql)
+                print(f"Consulta a la tabla GATOS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_gato_by_id(id):
+    sql = (
+        "SELECT * FROM GATOS WHERE id = :id_gato"
+    )
+
+    parametros = {"id_gato": id}
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql,parametros)
+                print(f"Consulta a la tabla GATOS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_ave():
+    sql = (
+        "SELECT * FROM AVES"
+    )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql)
+                print(f"Consulta a la tabla AVES")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_ave_by_id(id):
+    sql = (
+        "SELECT * FROM AVES WHERE id = :id_ave"
+    )
+
+    parametros = {"id_ave": id}
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql,parametros)
+                print(f"Consulta a la tabla AVES")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_HMedico():
+    sql = (
+        "SELECT * FROM HMEDICO"
+    )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql)
+                print(f"Consulta a la tabla HISTORIAL MEDICO")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_HMedico_by_id(id):
+    sql = (
+        "SELECT * FROM GATOS WHERE id = :id_historial"
+    )
+
+    parametros = {"id_historial": id}
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql,parametros)
+                print(f"Consulta a la tabla GATOS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_mascota():
+    sql = (
+        "SELECT * FROM MASCOTAS"
+    )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql)
+                print(f"Consulta a la tabla MASCOTAS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def read_mascota_by_id(id):
+    sql = (
+        "SELECT * FROM MASCOTAS WHERE id = :id"
+    )
+
+    parametros = {"id": id}
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql,parametros)
+                print(f"Consulta a la tabla MASCOTAS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
+def update_perros(id_perro, nombre: Optional[str], edad: Optional[int], historial_vacunas:Optional[str]):
+    sets = []
+    binds = {"id_perro": id_perro}
+
+    if nombre is not None:         
+        sets.append("nombre =: nombre")         
+        binds["nombre"] = nombre   
+    if edad is not None:         
+        sets.append("edad =: edad")         
+        binds["edad"] = edad   
+    if historial_vacunas is not None:         
+        sets.append("historial_vacunas =: historial_vacunas")         
+        binds["historial_vacunas"] = datetime.strptime(historial_vacunas, "%Y-%m-%d")       
+    if not sets:         
+        print("No hay campos para actualizar.")         
+        return      
+    sql = f"UPDATE PERROS SET {", ".join(sets)} WHERE id_perro =: id_perro"      
+    with get_connection() as conn:         
+        with conn.cursor() as cur:             
+            cur.execute(sql, binds)             
+            conn.commit()             
+        print(f"Perro con id={id_perro} actualizada.") 
+
+
+update_perros(
     id_perro=1,
-    nombre= "Alberto",
-    edad= 12,
-    historial_vacunas= None
-)
+    nombre="Gaston",
+    edad=5,
+    historial_vacunas="2025-01-02")
