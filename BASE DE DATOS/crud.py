@@ -31,7 +31,7 @@ def create_all_tables():
             "id_perro INTEGER PRIMARY KEY,"
             "nombre VARCHAR(60),"
             "edad NUMBER(10),"
-            "historial_vacunas DATE"
+            "historial_vacunas VARCHAR(100)"
             ")"
         ),
         (
@@ -56,7 +56,7 @@ def create_all_tables():
             "id_historial INTEGER PRIMARY KEY,"
             "observaciones VARCHAR(100),"
             "tratamientos VARCHAR(200),"
-            "fecha_consulta DATE,"
+            "fecha_consulta VARCHAR(100),"
             "idPerro INTEGER,"
             "idGato INTEGER,"
             "idAve INTEGER,"
@@ -73,7 +73,7 @@ def create_perro(
         id_perro:int,
         nombre:str,
         edad:int,
-        historial_vacunas:datetime
+        historial_vacunas:str
 ):
     sql = (        
         "INSERT INTO PERROS (id_perro, nombre, edad, historial_vacunas)"
@@ -201,12 +201,12 @@ def read_perro():
         err = e
         print(f"Error al mostrar datos: {err}")
 
-def read_perro_by_id(id):
+def read_perro_by_id(id_perro):
     sql = (
-        "SELECT * FROM PERROS WHERE id = :id_perro"
+        "SELECT * FROM PERROS WHERE id_perro = :id_perro"
     )
 
-    parametros = {"id_perro": id}
+    parametros = {"id_perro": id_perro}
 
     try:
         with get_connection() as conn:
@@ -235,12 +235,12 @@ def read_gato():
         err = e
         print(f"Error al mostrar datos: {err}")
 
-def read_gato_by_id(id):
+def read_gato_by_id(id_gato):
     sql = (
-        "SELECT * FROM GATOS WHERE id = :id_gato"
+        "SELECT * FROM GATOS WHERE id_gato = :id_gato"
     )
 
-    parametros = {"id_gato": id}
+    parametros = {"id_gato": id_gato}
 
     try:
         with get_connection() as conn:
@@ -269,12 +269,12 @@ def read_ave():
         err = e
         print(f"Error al mostrar datos: {err}")
 
-def read_ave_by_id(id):
+def read_ave_by_id(id_ave):
     sql = (
-        "SELECT * FROM AVES WHERE id = :id_ave"
+        "SELECT * FROM AVES WHERE id_ave = :id_ave"
     )
 
-    parametros = {"id_ave": id}
+    parametros = {"id_ave": id_ave}
 
     try:
         with get_connection() as conn:
@@ -303,12 +303,12 @@ def read_HMedico():
         err = e
         print(f"Error al mostrar datos: {err}")
 
-def read_HMedico_by_id(id):
+def read_HMedico_by_id(id_historial):
     sql = (
-        "SELECT * FROM GATOS WHERE id = :id_historial"
+        "SELECT * FROM GATOS WHERE id_historial = :id_historial"
     )
 
-    parametros = {"id_historial": id}
+    parametros = {"id_historial": id_historial}
 
     try:
         with get_connection() as conn:
@@ -333,7 +333,7 @@ def update_perros(id_perro, nombre: Optional[str], edad: Optional[int], historia
         binds["edad"] = edad   
     if historial_vacunas is not None:         
         sets.append("historial_vacunas =: historial_vacunas")         
-        binds["historial_vacunas"] = datetime.strptime(historial_vacunas, "%Y-%m-%d")       
+        binds["historial_vacunas"] = historial_vacunas       
     if not sets:         
         print("No hay campos para actualizar.")         
         return      
@@ -405,7 +405,7 @@ def update_HMedico(id_historial, observaciones: Optional[str], tratamientos: Opt
         sets.append =("tratamientos =: tratamientos")                  
     if fechaconsulta is not None:         
         sets.append("fecha_consulta =: fecha_consulta")         
-        binds["fecha_consulta"] = datetime.strptime(fechaconsulta, "%Y-%m-%d")  
+        binds["fecha_consulta"] = fechaconsulta
     if not sets:         
         print("No hay campos para actualizar.")         
         return      
@@ -418,14 +418,14 @@ def update_HMedico(id_historial, observaciones: Optional[str], tratamientos: Opt
 
 def delete_perros(id_perro: int):
     sql = (
-        "DELETE FROM PERROS WHERE id: id_perro"
+        "DELETE FROM PERROS WHERE id_perro = :id_perro"
     )
 
     parametros = {"id_perro": id_perro}
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query, parametros)
+                cur.execute(sql, parametros)
             conn.commit()
             print(f"Dato eliminado. \n {parametros}")
     except oracledb.DatabaseError as e:
@@ -434,14 +434,14 @@ def delete_perros(id_perro: int):
 
 def delete_gatos(id_gato: int):
     sql = (
-        "DELETE FROM GATOS WHERE id: id_gato"
+        "DELETE FROM GATOS WHERE id = :id_gato"
     )
 
     parametros = {"id_gato": id_gato}
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query, parametros)
+                cur.execute(sql, parametros)
             conn.commit()
             print(f"Dato eliminado. \n {parametros}")
     except oracledb.DatabaseError as e:
@@ -450,14 +450,14 @@ def delete_gatos(id_gato: int):
 
 def delete_aves(id_ave: int):
     sql = (
-        "DELETE FROM AVES WHERE id: id_ave"
+        "DELETE FROM AVES WHERE id = :id_ave"
     )
 
     parametros = {"id_ave": id_ave}
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query, parametros)
+                cur.execute(sql, parametros)
             conn.commit()
             print(f"Dato eliminado. \n {parametros}")
     except oracledb.DatabaseError as e:
@@ -466,14 +466,14 @@ def delete_aves(id_ave: int):
 
 def delete_historial(id_historial: int):
     sql = (
-        "DELETE FROM HISTORIAL_MEDICO WHERE id: id_perro"
+        "DELETE FROM HISTORIAL_MEDICO WHERE id = :id_historial"
     )
 
     parametros = {"id_historial": id_historial}
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query, parametros)
+                cur.execute(sql, parametros)
             conn.commit()
             print(f"Dato eliminado. \n {parametros}")
     except oracledb.DatabaseError as e:
@@ -492,36 +492,37 @@ def menu_perros():
             |2. LEER PERROS.                                     |
             |3. LEER PERRO POR ID.                               |
             |4. MODIFICAR PERRO.                                 |
-            |5. ELIMINAR PERRO MEDICO.                           |
+            |5. ELIMINAR PERRO.                                  |
             |0. VOLVER AL MENÚ PRINCIPAL.                        |
             ╚====================================================╝
             """
         )
         opcion = input("Selecciona una opción [1-5, 0 para salir]: ")
        
-        if opcion == 0:
-
+        if opcion == "0":
+            os.system("cls")
             print("Adiós")
             input("Presiona ENTER para continuar...")
-
             break
         elif opcion == "1":
             try:
                 id_perro = int(input ("Ingrese el ID del perro: "))
-                edad = int(input("Ingresa la edad del perro: "))
                 nombre = input("Ingresa el nombre del Perro: ")
-                historial_vacunas = datetime.strptime(input("Ingresa su historial de vacunas (año-mes-dia). Ej: 2002-12-30:"))
+                edad = int(input("Ingresa la edad del perro: "))
+                historial_vacunas = input("Ingresa su historial de vacunas (año-mes-dia). Ej: 2025-12-10: ")
+                create_perro(id_perro, nombre, edad, historial_vacunas)
             except ValueError:
-                return print ("Ingresaste un valor no númerico.")
-            create_perro(id_perro, edad, nombre, historial_vacunas)
+                print ("Ingresaste un valor no númerico.")            
+            input("Presiona ENTER para continuar.")
+
         elif opcion == "2":
             read_perro()
-            input = ("Presiona ENTER para continuar.")
+            input("Presiona ENTER para continuar.")
 
         elif opcion == "3":
             try:
-                id = int(input("Ingrese el id numerico del perro: "))
-                read_perro_by_id(id)
+                id_perro = int(input("Ingrese el id numerico del perro: "))
+                read_perro_by_id(id_perro)
             except ValueError:
                 print("Ingresaste un valor no númerico")
 
@@ -532,22 +533,25 @@ def menu_perros():
                 nombre = input("Ingrese nombre del perro: ")
                 edad = input("Ingrese edad del perro: ")
                 historial_vacunas = input("Ingresa su historial de vacunas (año-mes-dia). Ej: 2002-12-30: ")
-                if len(nombres.strip()) == 0:
-                    nombres = None
+                if len(nombre.strip()) == 0:
+                    nombre = None
                 if len(edad.strip()) == 0:
-                    apellidos = None
+                    edad = None
                 if len(historial_vacunas.strip()) == 0:
                     historial_vacunas = None
-                update_perros(id_perro,nombre,apellidos,historial_vacunas)
+                update_perros(id_perro,nombre,edad,historial_vacunas)
             except ValueError:
                 print("Ingresaste un valor no númerico")
 
+            input("Presione ENTER para continuar...")
         elif opcion == "5":
             try:
-                id = int(input("Ingrese el id numerico del perro: "))
+                id_perro = int(input("Ingrese el id numerico del perro: "))
                 delete_perros(id_perro)
             except ValueError:
                 print("Ingresaste un valor no númerico")
+
+            input("Presione ENTER para continuar...")
         else:
             print("Opción inválida.")
             input("Presione ENTER para continuar...")
