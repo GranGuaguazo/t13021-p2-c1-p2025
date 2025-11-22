@@ -204,10 +204,11 @@ def read_perro():
 def read_perro_by_id(id_perro):
     try:
         sql = """
-        SELECT id_perro, nombre, edad, historial_vacuna
+        SELECT id_perro, nombre, edad, historial_vacunas
         FROM PERROS
         WHERE id_perro = :id_perro
         """
+
         parametros = {"id_perro": id_perro}
 
         with get_connection() as conn:
@@ -215,47 +216,41 @@ def read_perro_by_id(id_perro):
                 cur.execute(sql, parametros)
                 row = cur.fetchone()
 
-                return
-            if row is None:
-                print(f"No se encontró ningún perro con id_perro = {id_perro}")
+
+        if row is None:
+            print(f"No se encontró ningún perro con id_perro = {id_perro}")
             return
+
         id_perro, nombre, edad, historial_vacunas = row
         print(f"ID Perro: {id_perro}, Nombre: {nombre}, Edad: {edad}, Historial Vacunas: {historial_vacunas}")
+
     except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
 
-def read_gato():
-    sql = (
-        "SELECT * FROM GATOS"
-    )
-
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                resultados = cur.execute(sql)
-                print(f"Consulta a la tabla GATOS")
-                for row in resultados:
-                    print(row)
-    except oracledb.DatabaseError as e:
-        err = e
-        print(f"Error al mostrar datos: {err}")
-
 def read_gato_by_id(id_gato):
-    sql = (
-        "SELECT * FROM GATOS WHERE id_gato = :id_gato"
-    )
-
-    parametros = {"id_gato": id_gato}
-
     try:
+        sql = """
+        SELECT id_gato, nombre, edad, esterilizado
+        FROM GATOS
+        WHERE id_gato = :id_gato
+        """
+
+        parametros = {"id_gato": id_gato}
+
         with get_connection() as conn:
             with conn.cursor() as cur:
-                resultados = cur.execute(sql,parametros)
-                print(f"Consulta a la tabla GATOS")
-                for row in resultados:
-                    print(row)
-    except oracledb.DatabaseError as e:
-        err = e
+                cur.execute(sql, parametros)
+                row = cur.fetchone()
+
+
+        if row is None:
+            print(f"No se encontró ningún perro con id_perro = {id_perro}")
+            return
+
+        id_perro, nombre, edad, esterilizado = row
+        print(f"ID Perro: {id_perro}, Nombre: {nombre}, Edad: {edad}, Esterilización: {esterilizado}")
+
+    except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
 
 def read_ave():
@@ -528,8 +523,10 @@ def menu_perros():
             try:
                 id_perro = int(input("Ingrese el id numerico del perro: "))
                 read_perro_by_id(id_perro)
+                input("Presiona ENTER para continuar...") 
             except ValueError:
                 print("Ingresaste un valor no númerico")
+                input("Presiona ENTER para continuar...")
 
         elif opcion == "4":
             try:
