@@ -202,21 +202,26 @@ def read_perro():
         print(f"Error al mostrar datos: {err}")
 
 def read_perro_by_id(id_perro):
-    sql = (
-        "SELECT * FROM PERROS WHERE id_perro = :id_perro"
-    )
-
-    parametros = {"id_perro": id_perro}
-
     try:
+        sql = """
+        SELECT id_perro, nombre, edad, historial_vacuna
+        FROM PERROS
+        WHERE id_perro = :id_perro
+        """
+        parametros = {"id_perro": id_perro}
+
         with get_connection() as conn:
             with conn.cursor() as cur:
-                resultados = cur.execute(sql,parametros)
-                print(f"Consulta a la tabla PERROS")
-                for row in resultados:
-                    print(row)
-    except oracledb.DatabaseError as e:
-        err = e
+                cur.execute(sql, parametros)
+                row = cur.fetchone()
+
+                return
+            if row is None:
+                print(f"No se encontró ningún perro con id_perro = {id_perro}")
+            return
+        id_perro, nombre, edad, historial_vacunas = row
+        print(f"ID Perro: {id_perro}, Nombre: {nombre}, Edad: {edad}, Historial Vacunas: {historial_vacunas}")
+    except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
 
 def read_gato():
