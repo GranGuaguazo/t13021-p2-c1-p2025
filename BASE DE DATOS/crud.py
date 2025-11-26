@@ -38,8 +38,8 @@ def create_all_tables():
             "CREATE TABLE GATOS ("
             "id_gato INTEGER PRIMARY KEY,"
             "nombre VARCHAR(60),"
-            "edad VARCHAR(10),"
-            "esterilizado VARCHAR(1)"
+            "edad NUMBER(10),"
+            "esterilizado VARCHAR(10)"
             ")"
         ),
         (
@@ -103,8 +103,8 @@ def create_gato(
         esterilizado:str
 ):
     sql = (        
-        "INSERT INTO GATOS (id_gato, nombre, edad, historial_vacunas)"
-        "VALUES (:id_gato, :nombre, :edad, :historial_vacunas)"
+        "INSERT INTO GATOS (id_gato, nombre, edad, esterilizado)"
+        "VALUES (:id_gato, :nombre, :edad, :esterilizado)"
     )
     parametros = {
         "id_gato": id_gato,
@@ -156,20 +156,20 @@ def create_HMedico(
         id_historial:int,
         observaciones:str,
         tratamientos:str,
-        fechaconsulta:datetime,
+        fecha_consulta:str,
         idPerro:int,
         idGato:int,
         idAve:int,
 ):
     sql = (
-        "INSERT INTO HISTORIAL_MEDICO (id_historial, observaciones, tratamientos, fechaconsulta, idPerro, idGato, idAve)"
-        "VALUES (:id_historial, :observaciones, :tratamientos, :fechaconsulta, :idPerro, :idGato, :idAve)"
+        "INSERT INTO HISTORIAL_MEDICO (id_historial, observaciones, tratamientos, fecha_consulta, idPerro, idGato, idAve)"
+        "VALUES (:id_historial, :observaciones, :tratamientos, :fecha_consulta, :idPerro, :idGato, :idAve)"
     )
     parametros = {
         "id_historial": id_historial,
         "observaciones": observaciones,
         "tratamientos": tratamientos,
-        "fechaconsulta" : fechaconsulta,
+        "fecha_consulta" : fecha_consulta,
         "idPerro" : idPerro,
         "idGato" : idGato,
         "idAve" : idAve
@@ -227,6 +227,22 @@ def read_perro_by_id(id_perro):
     except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
 
+def read_gatos():
+    sql = (
+        "SELECT * FROM GATOS"
+    )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                resultados = cur.execute(sql)
+                print(f"Consulta a la tabla GATOS")
+                for row in resultados:
+                    print(row)
+    except oracledb.DatabaseError as e:
+        err = e
+        print(f"Error al mostrar datos: {err}")
+
 def read_gato_by_id(id_gato):
     try:
         sql = """
@@ -244,11 +260,11 @@ def read_gato_by_id(id_gato):
 
 
         if row is None:
-            print(f"No se encontró ningún perro con id_perro = {id_perro}")
+            print(f"No se encontró ningún perro con id_gato = {id_gato}")
             return
 
         id_perro, nombre, edad, esterilizado = row
-        print(f"ID Perro: {id_perro}, Nombre: {nombre}, Edad: {edad}, Esterilización: {esterilizado}")
+        print(f"ID gato: {id_gato}, Nombre: {nombre}, Edad: {edad}, Esterilización: {esterilizado}")
 
     except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
@@ -270,21 +286,29 @@ def read_ave():
         print(f"Error al mostrar datos: {err}")
 
 def read_ave_by_id(id_ave):
-    sql = (
-        "SELECT * FROM AVES WHERE id_ave = :id_ave"
-    )
-
-    parametros = {"id_ave": id_ave}
-
     try:
+        sql = """
+        SELECT id_perro, nombre, edad, contrlol_vuelo, tipo_jaula
+        FROM AVES
+        WHERE id_ave = :id_ave
+        """
+
+        parametros = {"id_ave": id_ave}
+
         with get_connection() as conn:
             with conn.cursor() as cur:
-                resultados = cur.execute(sql,parametros)
-                print(f"Consulta a la tabla AVES")
-                for row in resultados:
-                    print(row)
-    except oracledb.DatabaseError as e:
-        err = e
+                cur.execute(sql, parametros)
+                row = cur.fetchone()
+
+
+        if row is None:
+            print(f"No se encontró ningún ave con id_ave = {id_ave}")
+            return
+
+        id_perro, nombre, edad, control_vuelo, tipo_jaula = row
+        print(f"ID ave: {id_ave}, Nombre: {nombre}, Edad: {edad}, Control de vuelo: {control_vuelo}, Tipo de jaula: {tipo_jaula}")
+
+    except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
 
 def read_HMedico():
@@ -304,21 +328,29 @@ def read_HMedico():
         print(f"Error al mostrar datos: {err}")
 
 def read_HMedico_by_id(id_historial):
-    sql = (
-        "SELECT * FROM GATOS WHERE id_historial = :id_historial"
-    )
-
-    parametros = {"id_historial": id_historial}
-
     try:
+        sql = """
+        SELECT id_historial, observaciones, tratamientos, fecha_consulta, idPerro, idGato, idAve
+        FROM HISTORIAL_MEDICO
+        WHERE id_historial = :id_historial
+        """
+
+        parametros = {"id_historial": id_historial}
+
         with get_connection() as conn:
             with conn.cursor() as cur:
-                resultados = cur.execute(sql,parametros)
-                print(f"Consulta a la tabla GATOS")
-                for row in resultados:
-                    print(row)
-    except oracledb.DatabaseError as e:
-        err = e
+                cur.execute(sql, parametros)
+                row = cur.fetchone()
+
+
+        if row is None:
+            print(f"No se encontró ningún historial con id = {id_historial}")
+            return
+
+        id_historial, observaciones, tratamientos, fecha_consulta, idPerro, idGato, idAve = row
+        print(f"ID historial: {id_historial}, Observaciones: {observaciones}, Tratamientos: {tratamientos}, fecha_consulta: {fecha_consulta}")
+
+    except oracledb.DatabaseError as err:
         print(f"Error al mostrar datos: {err}")
 
 def update_perros(id_perro, nombre: Optional[str], edad: Optional[int], historial_vacunas:Optional[str]):
@@ -434,7 +466,7 @@ def delete_perros(id_perro: int):
 
 def delete_gatos(id_gato: int):
     sql = (
-        "DELETE FROM GATOS WHERE id = :id_gato"
+        "DELETE FROM GATOS WHERE id_gato = :id_gato"
     )
 
     parametros = {"id_gato": id_gato}
@@ -559,6 +591,262 @@ def menu_perros():
             input("Presione ENTER para continuar...")
             break
 
+def menu_gatos():
+    while True:
+        os.system("cls")
+        print(
+            """
+            ==========================================
+            |            ⚆_⚆ Menú Gatos             |
+            ==========================================
+            | 1. Insertar gatos                      |
+            | 2. Leer gatos                          |
+            | 3. Leer gatos por ID                   |
+            | 4. Modificar gatos                     |
+            | 5. Eliminar gatos                      |
+            | 0. Volver al menú principal            |
+            ==========================================
+            """
+        )
+        opcion = input("Selecciona una opcion [1-5, 0 para volver al menu principal]: ")
+
+        if opcion == "0":
+            os.system("cls")
+            print("Volviendo al menu principal ヾ(•ω•`)o")
+            input("Presiona ENTER para continuar...")
+            break
+        elif opcion == "1":
+            try:
+                id_gato = int(input("Ingrese el id numerico de el gato: "))
+                nombre = input("Ingresa el nombre de el gato: ")
+                edad = int(input("Ingresa la edad de el gato: "))
+                esterilizado = input("Ingresa si el gato esta o no esterilizado: ")
+                create_gato(id, nombre, edad, esterilizado)
+            except ValueError as e:
+                print(f"Ingresaste un valor no numerico: {e}")
+
+            input("Presiona ENTER para continuar...")
+        elif opcion == "2":
+            read_gatos()
+            input("Presiona ENTER para continuar...")
+        elif opcion == "3":
+            try:
+                id_gato = int(input("Ingresa el id numerico de el gato: "))
+                read_gato_by_id(id)
+            except ValueError:
+                print("Ingresaste un valor no numerico")
+
+            input("Presiona ENTER para continuar...")
+        elif opcion == "4":
+            try:
+                id_gato = int(input("Ingresa el id numerico de el gato: "))
+                print("⚠️ Sólo digite cuándo quiera modificar el dato")
+                nombre = input("Ingresa el nombre nuevo de el gato: ")
+                edad = input("Ingresa la nueva edad del gato: ")
+                esterilizado = input("Ingresa si esta o no esterilizado: ")
+                if len(nombre.strip()) == 0:
+                    nombre = None
+                if len(edad.strip()) == 0:
+                    edad = None
+                if len(esterilizado.strip()) == 0:
+                    esterilizado = None
+                update_gatos(id_gato, nombre, edad, esterilizado)
+            except ValueError:
+                print("Ingresaste un valor no numerico")
+
+            input("Presiona ENTER para continuar...")
+        elif opcion == "5":
+            try:
+                id_gato = int(input("Ingresa el id numerico de el gato: "))
+                delete_gatos(id)
+            except ValueError:
+                print("Ingresaste un valor no numerico")
+
+            input("Presiona ENTER para continuar...")
+        else:
+            print("Opcion Invalida.")
+            input("Presiona ENTER para continuar...")
+            break
+
+def menu_aves():
+    while True:
+        os.system("cls")
+        print(
+            """
+            ==========================================
+            |            ⚆_⚆ Menú Aves              |
+            ==========================================
+            | 1. Insertar aves                       |
+            | 2. Leer aves                           |
+            | 3. Leer aves por ID                    |
+            | 4. Modificar aves                      |
+            | 5. Eliminar aves                       |
+            | 0. Volver al menú principal            |
+            ==========================================
+            """
+        )
+        opcion = input("Selecciona una opcion [1-5, 0 para volver al menu principal]: ")
+
+        if opcion == "0":
+            os.system("cls")
+            print("Volviendo al menu principal ヾ(•ω•`)o")
+            input("Presiona ENTER para continuar...")
+            break
+        elif opcion == "1":
+            try:
+                id = int(input("Ingrese el id numerico de el ave: "))
+                nombre = input("Ingresa el nombre de el ave: ")
+                edad = int(input("Ingresa la edad de el ave: "))
+                control_vuelo = input("Ingresa el control de vuelo de el ave: ")
+                tipo_jaula = input("Ingresa el tipo de jaula de el ave: ")
+                create_ave(id_ave, nombre, edad, control_vuelo, tipo_jaula)
+            except ValueError as e:
+                print(f"Ingresaste un valor no numerico: {e}")
+
+            input("Presiona ENTER para continuar...")
+        elif opcion == "2":
+            read_ave()
+            input("Presiona ENTER para continuar...")
+        elif opcion == "3":
+            try:
+                id_ave = int(input("Ingresa el id numerico de el ave: "))
+                read_ave_by_id(id_ave)
+            except ValueError:
+                print("Ingresaste un valor no numerico")
+
+            input("Presiona ENTER para continuar...")
+        elif opcion == "4":
+            try:
+                id_ave = int(input("Ingresa el id numerico de el ave: "))
+                print("⚠️ Sólo digite cuándo quiera modificar el dato")
+                nombre = input("Ingresa el nombre nuevo de el ave: ")
+                edad = (input("Ingresa la nueva edad del ave: "))
+                control_vuelo = input("Ingresa el control de vuelo de el ave: ")
+                tipo_jaula = input("Ingresa el tipo de jaula de el ave: ")
+                if len(nombre.strip()) == 0:
+                    nombre = None
+                if len(edad.strip()) == 0:
+                    edad = None
+                if len(control_vuelo.strip()) == 0:
+                    control_vuelo = None
+                if len(tipo_jaula.strip()) == 0:
+                    tipo_jaula = None
+                update_aves(id_ave, nombre, edad, control_vuelo, tipo_jaula)
+            except ValueError:
+                print("Ingresaste un valor no numerico")
+
+            input("Presiona ENTER para continuar...")
+        elif opcion == "5":
+            try:
+                id_ave = int(input("Ingresa el id numerico de el ave: "))
+                delete_aves(id_ave)
+            except ValueError:
+                print("Ingresaste un valor no numerico")
+
+            input("Presiona ENTER para continuar...")
+        else:
+            print("Opcion Invalida.")
+            input("Presiona ENTER para continuar...")
+            break
+
+def menu_HMedico():
+    while True:
+        os.system("cls")
+        print(
+            """
+            ╔====================================================╗
+            |           MENÚ HISTORIAL MÉDICO                    |
+            ======================================================
+            |1. CREAR HISTORIAL.                                 |
+            |2. LEER HISTORIALES.                                |
+            |3. LEER HISTORIAL POR ID.                           |
+            |4. MODIFICAR HISTORIAL.                             |
+            |5. ELIMINAR HISTORIAL.                              |
+            |0. VOLVER AL MENÚ PRINCIPAL.                        |
+            ╚====================================================╝
+            """
+        )
+        opcion = input("Selecciona una opción [1-5, 0 para salir]: ")
+        
+        if opcion == "0":
+            os.system("cls")
+            print("Volviendo al menú principal.")
+            input("Presiona ENTER para continuar...")
+            break
+        elif opcion == "1":
+            try:
+                id_historial = int(input ("Ingrese el ID del historial: "))
+                observaciones = input("Ingrese observaciones: ")
+                tratamientos = input("Ingrese tratamientos: ")
+                fecha_consulta = input("Ingrese la fecha de consulta (Ej: DD/MM/AAAA): ")
+                
+                
+                idPerro_input = input("ID Perro (opcional, deje vacío si no aplica): ")
+                idGato_input = input("ID Gato (opcional, deje vacío si no aplica): ")
+                idAve_input = input("ID Ave (opcional, deje vacío si no aplica): ")
+                
+                idPerro = int(idPerro_input) if idPerro_input.strip() else None
+                idGato = int(idGato_input) if idGato_input.strip() else None
+                idAve = int(idAve_input) if idAve_input.strip() else None
+                
+                create_HMedico(id_historial, observaciones, tratamientos, fecha_consulta, idPerro, idGato, idAve)
+            except ValueError:
+                print ("Ingresaste un valor no númerico para ID o FK.") 
+            input("Presiona ENTER para continuar.")
+
+        elif opcion == "2":
+            read_HMedico()
+            input("Presiona ENTER para continuar.")
+
+        elif opcion == "3":
+            try:
+                id_historial = int(input("Ingrese el id numerico del historial: "))
+                read_HMedico_by_id(id_historial)
+                input("Presiona ENTER para continuar...") 
+            except ValueError:
+                print("Ingresaste un valor no númerico")
+                input("Presiona ENTER para continuar...")
+
+        elif opcion == "4":
+            try:
+                id_historial = int(input("Ingrese el id numerico del historial a modificar: "))
+                print("⚠️ Sólo digite el nuevo valor si desea modificar el dato. Deje vacío para no modificar.")
+                observaciones = input("Ingrese nuevas observaciones: ")
+                tratamientos = input("Ingrese nuevos tratamientos: ")
+                fecha_consulta = input("Ingrese nueva fecha de consulta (Ej: DD/MM/AAAA): ")
+                
+                idPerro_input = input("Nuevo ID Perro (opcional): ")
+                idGato_input = input("Nuevo ID Gato (opcional): ")
+                idAve_input = input("Nuevo ID Ave (opcional): ")
+                
+                idPerro = int(idPerro_input) if idPerro_input.strip() else None
+                idGato = int(idGato_input) if idGato_input.strip() else None
+                idAve = int(idAve_input) if idAve_input.strip() else None
+
+                update_HMedico(
+                    id_historial,
+                    observaciones if observaciones.strip() else None,
+                    tratamientos if tratamientos.strip() else None,
+                    fecha_consulta if fecha_consulta.strip() else None,
+                    idPerro,
+                    idGato,
+                    idAve
+                )
+            except ValueError:
+                print("Ingresaste un valor no númerico para el ID o FK.")
+
+            input("Presione ENTER para continuar...")
+        elif opcion == "5":
+            try:
+                id_historial = int(input("Ingrese el id numerico del historial a eliminar: "))
+                delete_historial(id_historial)
+            except ValueError:
+                print("Ingresaste un valor no númerico")
+
+            input("Presione ENTER para continuar...")
+        else:
+            print("Opción inválida.")
+            input("Presione ENTER para continuar...")
 
 def main():
     while True:
@@ -588,11 +876,11 @@ def main():
         elif opcion == "2":
             menu_perros()
         elif opcion == "3":
-            pass
+            menu_gatos()
         elif opcion == "4":
-            pass
+            menu_aves()
         elif opcion == "5":
-            pass
+            menu_HMedico()
         else:
             print("Opción inválida.")
             input("Presione ENTER para continuar...")
