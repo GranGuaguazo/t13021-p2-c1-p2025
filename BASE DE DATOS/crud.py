@@ -621,7 +621,7 @@ def menu_gatos():
                 nombre = input("Ingresa el nombre de el gato: ")
                 edad = int(input("Ingresa la edad de el gato: "))
                 esterilizado = input("Ingresa si el gato esta o no esterilizado: ")
-                create_gato(id, nombre, edad, esterilizado)
+                create_gato(id_gato, nombre, edad, esterilizado)
             except ValueError as e:
                 print(f"Ingresaste un valor no numerico: {e}")
 
