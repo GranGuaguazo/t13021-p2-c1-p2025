@@ -4,12 +4,11 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-
 load_dotenv()
-USUARIO_PRUEBA = os.getenv("DEFAULT_USER", "CLINICA_VET")
-PASS_PRUEBA = os.getenv("DEFAULT_PASS", "Inacap#2025") 
-ROL_PRUEBA = os.getenv("DEFAULT_ROLE", "admin")
-ORACLE_DSN = os.getenv("ORACLE_DSN", "localhost/xe")
+USUARIO_PRUEBA = os.getenv("ORACLE_USER")
+PASS_PRUEBA = os.getenv("ORACLE_PASSWORD") 
+ROL_PRUEBA = os.getenv("ADMIN_ROLE")
+ORACLE_DSN = os.getenv("ORACLE_DSN")
 
 
 class SeguridadAuth:
