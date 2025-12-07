@@ -4,14 +4,13 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-# --- Configuración Inicial ---
+
 load_dotenv()
 USUARIO_PRUEBA = os.getenv("DEFAULT_USER", "CLINICA_VET")
 PASS_PRUEBA = os.getenv("DEFAULT_PASS", "Inacap#2025") 
 ROL_PRUEBA = os.getenv("DEFAULT_ROLE", "admin")
 ORACLE_DSN = os.getenv("ORACLE_DSN", "localhost/xe")
 
-# --- Módulos POO ---
 
 class SeguridadAuth:
     @staticmethod
@@ -101,7 +100,6 @@ class SistemaEcoTech:
     def consultar_y_registrar(self):
         print("\n--- CONSULTA DE INDICADORES ---")
         
-        # Selección
         print("Indicadores disponibles:", ", ".join(self.api.CODIGOS.keys()))
         indicador_sel = input("Seleccione indicador (Ej: UF): ").strip().upper()
         fecha_sel = input("Ingrese fecha (DD-MM-YYYY): ").strip()
