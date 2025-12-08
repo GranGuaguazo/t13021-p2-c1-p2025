@@ -3,13 +3,13 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import oracledb 
+import sys
 
 load_dotenv()
-USUARIO_PRUEBA = os.getenv("ORACLE_USER")
-PASS_PRUEBA = os.getenv("ORACLE_PASSWORD") 
-ROL_PRUEBA = os.getenv("ADMIN_ROLE")
+ORACLE_USER = os.getenv("ORACLE_USER")
+ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
 ORACLE_DSN = os.getenv("ORACLE_DSN")
-
 
 class SeguridadAuth:
     @staticmethod
@@ -23,22 +23,6 @@ class SeguridadAuth:
         except: 
             return False
 
-class GestorSimulado:
-    def __init__(self, user, pwd, rol):
-        self.__hash_pass = SeguridadAuth.hash_password(pwd)
-        self.usuarios_db = {
-            user: {'password_hash': self.__hash_pass, 'rol': rol}
-        }
-    
-    def buscar_usuario(self, username):
-        if username in self.usuarios_db:
-            data = self.usuarios_db[username]
-            return (username, data['password_hash'], data['rol'])
-        return None
-
-    def log_indicador(self, indicador, usuario):
-        print(f"\n[LOG SIMULADO] El usuario '{usuario}' registró la consulta del {indicador.nombre} ({indicador.valor}) del {indicador.fecha_valor}.")
-
 class IndicadorEconomico:
     def __init__(self, nombre, valor, fecha, origen="mindicador.cl"):
         self.nombre = nombre
@@ -47,7 +31,7 @@ class IndicadorEconomico:
         self.fecha_consulta = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.origen = origen
 
-class ServicioIndicadores:   
+class ServicioIndicadores:
     BASE_URL = "https://mindicador.cl/api"
     CODIGOS = {"UF": "uf", "IVP": "ivp", "IPC": "ipc", "UTM": "utm", "Dolar": "dolar", "Euro": "euro"}
 
@@ -75,9 +59,64 @@ class ServicioIndicadores:
         return None
 
 
+class GestorDB:
+    def __init__(self, user, pwd, dsn):
+        self.conn = None
+        try:
+            print(f"🔗 Conectando a Oracle DSN: {dsn}...")
+            self.conn = oracledb.connect(user=user, password=pwd, dsn=dsn)
+            print("✅ Conexión a Oracle establecida.")
+        except oracledb.Error as e:
+            print(f"❌ Error al conectar a la base de datos de Oracle: {e}")
+            sys.exit(1) 
+        
+    def buscar_usuario(self, username):
+        if not self.conn: return None
+
+        cursor = self.conn.cursor()
+        
+        sql = "SELECT USUARIO, PASSWORD_HASH, ROL FROM USUARIOS WHERE USUARIO = :usuario"
+        
+        try:
+            cursor.execute(sql, [username])
+            return cursor.fetchone() 
+        except oracledb.Error as e:
+            print(f"❌ Error al buscar usuario en DB: {e}")
+            return None
+        finally:
+            cursor.close()
+
+    def log_indicador(self, indicador: IndicadorEconomico, usuario: str):
+        if not self.conn: return
+
+        cursor = self.conn.cursor()
+        
+        consulta = """
+            INSERT INTO LOG_INDICADORES 
+            (INDICADOR, VALOR, FECHA_VALOR, FECHA_CONSULTA, USUARIO_CONSULTA)
+            VALUES (:1, :2, TO_DATE(:3, 'YYYY-MM-DD'), TO_DATE(:4, 'YYYY-MM-DD HH24:MI:SS'), :5)
+        """
+        
+        try:
+            cursor.execute(consulta, (
+                indicador.nombre, 
+                indicador.valor, 
+                indicador.fecha_valor,          
+                indicador.fecha_consulta,       
+                usuario
+            ))
+            self.conn.commit()
+            print(f"\n[LOG ORACLE] El usuario '{usuario}' registró la consulta del {indicador.nombre} ({indicador.valor}) del {indicador.fecha_valor}.")
+        except oracledb.Error as e:
+            print(f"❌ Error al registrar el log en Oracle: {e}")
+            self.conn.rollback() 
+        finally:
+            cursor.close()
+
+
 class SistemaEcoTech:
     def __init__(self):
-        self.db = GestorSimulado(USUARIO_PRUEBA, PASS_PRUEBA, ROL_PRUEBA)
+        self.db = GestorDB(ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN)
         self.api = ServicioIndicadores()
         self.usuario_actual = None
 
@@ -85,7 +124,6 @@ class SistemaEcoTech:
         print("\n--- AUTENTICACIÓN ---")
         user = input("Usuario: ")
         pwd = input("Contraseña: ")
-        
         data = self.db.buscar_usuario(user)
         
         if data and SeguridadAuth.verify_password(pwd, data[1]):
@@ -93,7 +131,7 @@ class SistemaEcoTech:
             print(f"🔑 ACCESO CONCEDIDO: {data[0]} ({data[2]})\n")
             return True
         else:
-            print("❌ USUARIO/CONTRASEÑA INCORRECTA.")
+            print("❌ USUARIO/CONTRASEÑA INCORRECTA. Intente con un usuario existente en la DB.")
             return False
 
     def consultar_y_registrar(self):
@@ -101,7 +139,7 @@ class SistemaEcoTech:
         
         print("Indicadores disponibles:", ", ".join(self.api.CODIGOS.keys()))
         indicador_sel = input("Seleccione indicador (Ej: UF): ").strip().upper()
-        fecha_sel = input("Ingrese fecha (DD-MM-YYYY): ").strip()
+        fecha_sel = input("Ingrese fecha (DD-MM-YYYY): ").strip() 
         
         if indicador_sel not in self.api.CODIGOS:
             print("❌ Indicador no válido.")
@@ -111,18 +149,19 @@ class SistemaEcoTech:
 
         if resultado:
             print(f"✅ Resultado: {resultado.nombre} = ${resultado.valor:,.2f} el {resultado.fecha_valor}")
-            if input("¿Desea registrar/loggear este dato? (s/n): ").lower() == 's':
+            if input("¿Desea registrar/loggear este dato en Oracle? (s/n): ").lower() == 's':
                 self.db.log_indicador(resultado, self.usuario_actual['username'])
         else:
-            print(f"❌ No se pudieron obtener datos para {indicador_sel} en la fecha {fecha_sel}.")
+            print(f"❌ No se pudieron obtener datos para {indicador_sel} en la fecha {fecha_sel}. (Revise la fecha: DD-MM-YYYY)")
 
     def iniciar(self):
         print("=======================================")
-        print("  SISTEMA ECOTECH - INICIO RÁPIDO")
+        print("  SISTEMA ECOTECH - CON ORACLE DB")
         print("=======================================")
         
-        if self.__autenticar():
-            self.consultar_y_registrar()
+        if self.usuario_actual is None:
+            if self.__autenticar():
+                self.consultar_y_registrar()
         
         print("\n--- FIN DEL PROGRAMA ---")
 
