@@ -59,7 +59,7 @@ class ServicioIndicadores:
         return None
 
 
-class GestorDB:
+class GestorBD:
     def __init__(self, user, pwd, dsn):
         self.conn = None
         try:
