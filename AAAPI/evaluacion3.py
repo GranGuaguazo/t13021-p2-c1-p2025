@@ -116,7 +116,7 @@ class GestorBD:
 
 class SistemaEcoTech:
     def __init__(self):
-        self.db = GestorDB(ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN)
+        self.db = GestorBD(ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN)
         self.api = ServicioIndicadores()
         self.usuario_actual = None
 
