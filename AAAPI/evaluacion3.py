@@ -65,35 +65,6 @@ class GestorBD:
     def get_connection(self):
         return oracledb.connect(user=self, password=self, dsn=self)
 
-    def create_all_tables(self):
-        tables = [
-        (
-        "CREATE TABLE USUARIOS ("
-        "USUARIO VARCHAR2(50) NOT NULL,"
-        "PASSWORD_HASH VARCHAR2(255) NOT NULL,"
-        "ROL VARCHAR2(50) NOT NULL,"
-        "CONSTRAINT PK_USUARIO PRIMARY KEY (USUARIO)"
-        ");"
-        ),
-        (
-        "CREATE TABLE LOG_INDICADORES ("
-        "LOG_ID NUMBER GENERATED ALWAYS AS IDENTITY," 
-        "INDICADOR VARCHAR2(20) NOT NULL,"                     
-        "VALOR NUMBER(18, 4) NOT NULL,"                     
-        "FECHA_VALOR DATE NOT NULL,"                    
-        "FECHA_CONSULTA TIMESTAMP NOT NULL,"                     
-        "USUARIO_CONSULTA VARCHAR2(50) NOT NULL,"                     
-        "CONSTRAINT PK_LOG_ID PRIMARY KEY (LOG_ID)"
-        ");"
-    
-        "CONSTRAINT FK_USUARIO_LOG" 
-            "FOREIGN KEY (USUARIO_CONSULTA)" 
-            "REFERENCES USUARIOS (USUARIO)"
-            "ON DELETE CASCADE"
-            ");" 
-        )
-    ]
-
     def query(self, sql: str, parametros: Optional[dict]= None):
         print(f"Ejecutando query \n{sql}\n{parametros}")
         try:
@@ -105,6 +76,40 @@ class GestorBD:
         except oracledb.DatabaseError as e:
             err = e
             print(f"No se pudo crear la tabla: {err}")
+
+    def create_all_tables(self):
+        tables = [
+        (
+
+            "CREATE TABLE USUARIOS ("
+            "USUARIO VARCHAR2(50) NOT NULL,"
+            "PASSWORD_HASH VARCHAR2(255) NOT NULL,"
+            "ROL VARCHAR2(50) NOT NULL,"
+            "CONSTRAINT PK_USUARIO PRIMARY KEY (USUARIO)"
+            ");"
+
+        ),
+        (
+            "CREATE TABLE LOG_INDICADORES ("
+            "LOG_ID NUMBER GENERATED ALWAYS AS IDENTITY," 
+            "INDICADOR VARCHAR2(20) NOT NULL,"                     
+            "VALOR NUMBER(18, 4) NOT NULL,"                     
+            "FECHA_VALOR DATE NOT NULL,"                    
+            "FECHA_CONSULTA TIMESTAMP NOT NULL,"                     
+            "USUARIO_CONSULTA VARCHAR2(50) NOT NULL,"                     
+            "CONSTRAINT PK_LOG_ID PRIMARY KEY (LOG_ID)"
+            ");"
+    
+            "CONSTRAINT FK_USUARIO_LOG" 
+                "FOREIGN KEY (USUARIO_CONSULTA)" 
+                "REFERENCES USUARIOS (USUARIO)"
+                "ON DELETE CASCADE"
+                ");" 
+        )
+    ]
+        
+        for query in tables:
+            create_schema(query)
     
     if __name__ == "__main__":
         db = load_dotenv
@@ -167,7 +172,7 @@ class SistemaEcoTech:
         
         if data and SeguridadAuth.verify_password(pwd, data[1]):
             self.usuario_actual = {'username': data[0], 'rol': data[2]}
-            print(f"🔑 ACCESO CONCEDIDO: {data[0]} ({data[2]})\n")
+            print(f"ACCESO CONCEDIDO: {data[0]} ({data[2]})\n")
             return True
         else:
             print("USUARIO/CONTRASEÑA INCORRECTA. Intente con un usuario existente en la DB.")
