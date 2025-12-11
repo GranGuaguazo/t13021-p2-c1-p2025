@@ -1,10 +1,7 @@
-import bcrypt
-import requests
+import bcrypt, requests, os, oracledb
+from typing import Optional
 from datetime import datetime
 from dotenv import load_dotenv
-import os
-import oracledb 
-import sys
 
 load_dotenv()
 ORACLE_USER = os.getenv("ORACLE_USER")
@@ -53,22 +50,64 @@ class ServicioIndicadores:
             return IndicadorEconomico(indicador, valor, fecha)
 
         except requests.exceptions.RequestException as e:
-            print(f"❌ Error de conexión/API: {e}")
+            print(f"Error de conexión/API: {e}")
         except Exception as e:
-            print(f"❌ Error de procesamiento: {e}")
+            print(f"Error de procesamiento: {e}")
         return None
 
 
 class GestorBD:
     def __init__(self, user, pwd, dsn):
-        self.conn = None
+        self.user = user
+        self.pwd = pwd
+        self.dsn = dsn
+
+    def get_connection(self):
+        return oracledb.connect(user=self, password=self, dsn=self)
+
+    def create_all_tables(self):
+        tables = [
+        (
+        "CREATE TABLE USUARIOS ("
+        "USUARIO VARCHAR2(50) NOT NULL,"
+        "PASSWORD_HASH VARCHAR2(255) NOT NULL,"
+        "ROL VARCHAR2(50) NOT NULL,"
+        "CONSTRAINT PK_USUARIO PRIMARY KEY (USUARIO)"
+        ");"
+        ),
+        (
+        "CREATE TABLE LOG_INDICADORES ("
+        "LOG_ID NUMBER GENERATED ALWAYS AS IDENTITY," 
+        "INDICADOR VARCHAR2(20) NOT NULL,"                     
+        "VALOR NUMBER(18, 4) NOT NULL,"                     
+        "FECHA_VALOR DATE NOT NULL,"                    
+        "FECHA_CONSULTA TIMESTAMP NOT NULL,"                     
+        "USUARIO_CONSULTA VARCHAR2(50) NOT NULL,"                     
+        "CONSTRAINT PK_LOG_ID PRIMARY KEY (LOG_ID)"
+        ");"
+    
+        "CONSTRAINT FK_USUARIO_LOG" 
+            "FOREIGN KEY (USUARIO_CONSULTA)" 
+            "REFERENCES USUARIOS (USUARIO)"
+            "ON DELETE CASCADE"
+            ");" 
+        )
+    ]
+
+    def query(self, sql: str, parametros: Optional[dict]= None):
+        print(f"Ejecutando query \n{sql}\n{parametros}")
         try:
-            print(f"🔗 Conectando a Oracle DSN: {dsn}...")
-            self.conn = oracledb.connect(user=user, password=pwd, dsn=dsn)
-            print("✅ Conexión a Oracle establecida.")
-        except oracledb.Error as e:
-            print(f"❌ Error al conectar a la base de datos de Oracle: {e}")
-            sys.exit(1) 
+            with self.get_connection() as conn:
+                with conn.cursor() as cur:
+                    resultados = cur.execute(sql, parametros)
+                    for fila in resultados:
+                        print(fila)
+        except oracledb.DatabaseError as e:
+            err = e
+            print(f"No se pudo crear la tabla: {err}")
+    
+    if __name__ == "__main__":
+        db = load_dotenv
         
     def buscar_usuario(self, username):
         if not self.conn: return None
@@ -81,7 +120,7 @@ class GestorBD:
             cursor.execute(sql, [username])
             return cursor.fetchone() 
         except oracledb.Error as e:
-            print(f"❌ Error al buscar usuario en DB: {e}")
+            print(f"Error al buscar usuario en DB: {e}")
             return None
         finally:
             cursor.close()
@@ -108,7 +147,7 @@ class GestorBD:
             self.conn.commit()
             print(f"\n[LOG ORACLE] El usuario '{usuario}' registró la consulta del {indicador.nombre} ({indicador.valor}) del {indicador.fecha_valor}.")
         except oracledb.Error as e:
-            print(f"❌ Error al registrar el log en Oracle: {e}")
+            print(f"Error al registrar el log en Oracle: {e}")
             self.conn.rollback() 
         finally:
             cursor.close()
@@ -131,7 +170,7 @@ class SistemaEcoTech:
             print(f"🔑 ACCESO CONCEDIDO: {data[0]} ({data[2]})\n")
             return True
         else:
-            print("❌ USUARIO/CONTRASEÑA INCORRECTA. Intente con un usuario existente en la DB.")
+            print("USUARIO/CONTRASEÑA INCORRECTA. Intente con un usuario existente en la DB.")
             return False
 
     def consultar_y_registrar(self):
@@ -142,21 +181,21 @@ class SistemaEcoTech:
         fecha_sel = input("Ingrese fecha (DD-MM-YYYY): ").strip() 
         
         if indicador_sel not in self.api.CODIGOS:
-            print("❌ Indicador no válido.")
+            print("Indicador no válido.")
             return
 
         resultado = self.api.consultar(indicador_sel, fecha_sel)
 
         if resultado:
-            print(f"✅ Resultado: {resultado.nombre} = ${resultado.valor:,.2f} el {resultado.fecha_valor}")
+            print(f"Resultado: {resultado.nombre} = ${resultado.valor:,.2f} el {resultado.fecha_valor}")
             if input("¿Desea registrar/loggear este dato en Oracle? (s/n): ").lower() == 's':
                 self.db.log_indicador(resultado, self.usuario_actual['username'])
         else:
-            print(f"❌ No se pudieron obtener datos para {indicador_sel} en la fecha {fecha_sel}. (Revise la fecha: DD-MM-YYYY)")
+            print(f"No se pudieron obtener datos para {indicador_sel} en la fecha {fecha_sel}. (Revise la fecha: DD-MM-YYYY)")
 
     def iniciar(self):
         print("=======================================")
-        print("  SISTEMA ECOTECH - CON ORACLE DB")
+        print("            SISTEMA ECOTECH            ")
         print("=======================================")
         
         if self.usuario_actual is None:

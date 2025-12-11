@@ -1,5 +1,8 @@
 import bcrypt
 
-password = "Inacap#2025" 
-hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-print(hash_password)
+incoming_psw = input("Ingrese su contraseña: ").encode("UTF-8")
+
+salt = bcrypt.gensalt(rounds=12)
+
+hashed_psw = bcrypt.hashpw(incoming_psw, salt)
+print(f"Su contraseña hasheada es: {hashed_psw}")
